@@ -4,12 +4,6 @@ import (
 	"sync"
 )
 
-type Bindings struct {
-	sql4prepare string
-	err         error
-	bindings    []any
-}
-
 type IDriver interface {
 	ToSqlSelect(c *Context) (sql4prepare string, binds []any)
 	ToSqlTable(c *Context) (sql4prepare string, values []any, err error)
@@ -22,14 +16,6 @@ type IDriver interface {
 	ToSqlInsert(c *Context, obj any, args ...TypeToSqlInsertCase) (sqlSegment string, binds []any, err error)
 	ToSqlUpdate(c *Context, arg any) (sqlSegment string, binds []any, err error)
 	ToSqlDelete(c *Context, obj any, mustColumn ...string) (sqlSegment string, binds []any, err error)
-}
-
-type Driver struct {
-	IDriver
-}
-
-func NewDriver(d IDriver) *Driver {
-	return &Driver{IDriver: d}
 }
 
 var driverMap = map[string]IDriver{}

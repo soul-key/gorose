@@ -22,13 +22,13 @@ type IBuilder interface {
 
 type Database struct {
 	*Engin
-	Driver  *Driver
+	Driver  IDriver
 	Context *Context
 }
 
 func NewDatabase(g *GoRose) *Database {
 	return &Database{
-		Driver:  NewDriver(GetDriver(g.driver)),
+		Driver:  GetDriver(g.driver),
 		Engin:   NewEngin(g),
 		Context: NewContext(g.prefix),
 	}

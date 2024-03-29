@@ -4,7 +4,7 @@ PHP Laravel ORM 的 go 实现, 与 laravel 官方文档保持一致 https://lara
 php 风格用法, 完全可以使用 laravel query builder 的文档做参考, 尽量做到 1:1 还原.  
 
 ## 安装
-目前还处于beta阶段, 请谨慎使用.
+目前还处于beta阶段, 请谨慎使用. 由于没有打 tag, 只能使用 go mod 的方式引入
 ```shell
 # go.mod
 
@@ -289,7 +289,7 @@ db().Where("id", ">", 1).To(&users)
 常用作join或者手动指定字段查询绑定
 ```go
 type Result struct {
-    Id    int64 `db:"id"`
+    Id    int64  `db:"id"`
     Aname string `db:"aname"`
     Bname string `db:"bname"`
 }

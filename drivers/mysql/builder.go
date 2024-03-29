@@ -82,7 +82,7 @@ func (b Builder) buildSqlTable(tab gorose.TableClause, prefix string) (sql4prepa
 	if v, ok := tab.Tables.(gorose.IBuilder); ok {
 		sql4prepare, binds, err = v.ToSql()
 		if tab.Alias != "" {
-			sql4prepare = fmt.Sprintf("(%s) %s", sql4prepare, tab.Alias)
+			sql4prepare = fmt.Sprintf("(%s) %s", sql4prepare, BackQuotes(tab.Alias))
 		}
 		return
 	}
@@ -103,7 +103,7 @@ func (b Builder) buildSqlTable(tab gorose.TableClause, prefix string) (sql4prepa
 		err = errors.New("table must be string | struct | slice")
 		return
 	}
-	return strings.TrimSpace(fmt.Sprintf("%s %s", sql4prepare, tab.Alias)), binds, err
+	return strings.TrimSpace(fmt.Sprintf("%s %s", sql4prepare, BackQuotes(tab.Alias))), binds, err
 }
 
 func (b Builder) toSqlWhere(c *gorose.Context, wc gorose.WhereClause) (sql4prepare string, binds []any, err error) {
