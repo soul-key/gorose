@@ -482,6 +482,10 @@ func (db *Database) Transaction(closure ...func(TxHandler) error) (err error) {
 // Value() => ValueTo()
 // List()  => ListTo()
 // Pluck() => PluckTo()
+// Value() => ValueTo()
+// Max()   => MaxTo()
+// Min()   => MinTo()
+// Sum()   => SumTo()
 
 // To 通用查询,go 绑定 struct/map
 func (db *Database) To(obj any, mustColumn ...string) (err error) {
