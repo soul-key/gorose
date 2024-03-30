@@ -13,6 +13,9 @@ import (
 func BackQuotes(arg any) string {
 	var tmp []string
 	if v, ok := arg.(string); ok {
+		if v == "" {
+			return ""
+		}
 		split := strings.Split(v, " ")
 		split2 := strings.Split(split[0], ".")
 		if len(split2) > 1 {
