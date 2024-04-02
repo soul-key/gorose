@@ -251,6 +251,8 @@ func (w *WhereClause) where(boolean string, column any, args ...any) IWhere {
 			}
 		} else if builder, ok := args[1].(IBuilder); ok {
 			w.addTypeWhereSubQuery(args[2].(string), column.(string), args[0].(string), builder)
+		} else if sub, ok := args[1].(func(*Context)); ok {
+			w.addTypeWhereSubHandler(args[2].(string), column.(string), args[0].(string), sub)
 		} else {
 			w.addTypeWhereStandard(args[2].(string), column.(string), args[0].(string), args[1])
 		}

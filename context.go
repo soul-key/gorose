@@ -66,6 +66,31 @@ func (db *Context) OrWhereRaw(raw string, bindings ...any) *Context {
 	db.WhereClause.OrWhereRaw(raw, bindings...)
 	return db
 }
+
+func (db *Context) WhereSub(column string, operation string, sub WhereSubHandler) *Context {
+	db.WhereClause.WhereSub(column, operation, sub)
+	return db
+}
+func (db *Context) OrWhereSub(column string, operation string, sub WhereSubHandler) *Context {
+	db.WhereClause.OrWhereSub(column, operation, sub)
+	return db
+}
+func (db *Context) WhereBuilder(column string, operation string, sub IBuilder) *Context {
+	db.WhereClause.WhereBuilder(column, operation, sub)
+	return db
+}
+func (db *Context) OrWhereBuilder(column string, operation string, sub IBuilder) *Context {
+	db.WhereClause.OrWhereBuilder(column, operation, sub)
+	return db
+}
+func (db *Context) WhereNested(handler WhereNestedHandler) *Context {
+	db.WhereClause.WhereNested(handler)
+	return db
+}
+func (db *Context) OrWhereNested(handler WhereNestedHandler) *Context {
+	db.WhereClause.OrWhereNested(handler)
+	return db
+}
 func (db *Context) GroupBy(columns ...string) *Context {
 	db.GroupClause.GroupBy(columns...)
 	return db
