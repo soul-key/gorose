@@ -32,7 +32,7 @@ type TypeToSqlIncDecCase struct {
 }
 type TypeToSqlInsertCase struct {
 	IsReplace       bool
-	IgnoreCase      string
+	IsIgnoreCase    bool
 	OnDuplicateKeys []string
 	UpdateFields    []string
 	MustColumn      []string

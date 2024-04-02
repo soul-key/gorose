@@ -66,7 +66,7 @@ func (b Builder) toSqlInsert(c *gorose.Context, data any, insertCase gorose.Type
 	}
 
 	var onDuplicateKey string
-	if len(insertCase.OnDuplicateKeys) > 0 {
+	if len(insertCase.UpdateFields) > 0 {
 		var tmp []string
 		for _, v := range insertCase.UpdateFields {
 			tmp = append(tmp, fmt.Sprintf("%s=VALUES(%s)", BackQuotes(v), BackQuotes(v)))
@@ -77,7 +77,7 @@ func (b Builder) toSqlInsert(c *gorose.Context, data any, insertCase gorose.Type
 	var insert = "INSERT"
 	if insertCase.IsReplace {
 		insert = "REPLACE"
-	} else if insertCase.IgnoreCase != "" {
+	} else if insertCase.IsIgnoreCase {
 		insert = "INSERT IGNORE"
 	}
 

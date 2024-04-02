@@ -259,7 +259,7 @@ func (db *Database) InsertGetId(obj any, mustColumn ...string) (lastInsertId int
 //
 // 参考 https://laravel.com/docs/10.x/queries#insert-statements
 func (db *Database) InsertOrIgnore(obj any, mustColumn ...string) (affectedRows int64, err error) {
-	result, err := db.insert(obj, TypeToSqlInsertCase{IgnoreCase: "IGNORE", MustColumn: mustColumn})
+	result, err := db.insert(obj, TypeToSqlInsertCase{IsIgnoreCase: true, MustColumn: mustColumn})
 	if err != nil {
 		return affectedRows, err
 	}
@@ -269,8 +269,9 @@ func (db *Database) InsertOrIgnore(obj any, mustColumn ...string) (affectedRows 
 // Upsert 插入数据，如果存在则更新。
 //
 // 参考 https://laravel.com/docs/10.x/queries#upserts
+// 如果是mysql,则不需要填写第二个参数,MySQL会自动处理唯一索引和主键冲突问题
 //
-//	eg: Upsert(obj, []string{"id"}, "id", "name")
+//	eg: Upsert(obj, []string{"id"}, []string{"age"}, "id", "name")
 func (db *Database) Upsert(obj any, onDuplicateKeys, updateFields []string, mustColumn ...string) (affectedRows int64, err error) {
 	result, err := db.insert(obj, TypeToSqlInsertCase{OnDuplicateKeys: onDuplicateKeys, UpdateFields: updateFields, MustColumn: mustColumn})
 	if err != nil {
