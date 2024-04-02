@@ -68,7 +68,7 @@ func (b Builder) toSqlInsert(c *gorose.Context, data any, insertCase gorose.Type
 	var onDuplicateKey string
 	if len(insertCase.OnDuplicateKeys) > 0 {
 		var tmp []string
-		for _, v := range insertCase.OnDuplicateKeys {
+		for _, v := range insertCase.UpdateFields {
 			tmp = append(tmp, fmt.Sprintf("%s=VALUES(%s)", BackQuotes(v), BackQuotes(v)))
 		}
 		onDuplicateKey = fmt.Sprintf("ON DUPLICATE KEY UPDATE %s", strings.Join(tmp, ", "))

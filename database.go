@@ -271,8 +271,8 @@ func (db *Database) InsertOrIgnore(obj any, mustColumn ...string) (affectedRows 
 // 参考 https://laravel.com/docs/10.x/queries#upserts
 //
 //	eg: Upsert(obj, []string{"id"}, "id", "name")
-func (db *Database) Upsert(obj any, onDuplicateKeys []string, mustColumn ...string) (affectedRows int64, err error) {
-	result, err := db.insert(obj, TypeToSqlInsertCase{OnDuplicateKeys: onDuplicateKeys, MustColumn: mustColumn})
+func (db *Database) Upsert(obj any, onDuplicateKeys, updateFields []string, mustColumn ...string) (affectedRows int64, err error) {
+	result, err := db.insert(obj, TypeToSqlInsertCase{OnDuplicateKeys: onDuplicateKeys, UpdateFields: updateFields, MustColumn: mustColumn})
 	if err != nil {
 		return affectedRows, err
 	}

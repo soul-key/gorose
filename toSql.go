@@ -34,6 +34,7 @@ type TypeToSqlInsertCase struct {
 	IsReplace       bool
 	IgnoreCase      string
 	OnDuplicateKeys []string
+	UpdateFields    []string
 	MustColumn      []string
 }
 
