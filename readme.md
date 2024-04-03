@@ -371,6 +371,7 @@ if age.Valid {
     fmt.Println(age.Int64)
 }
 ```
+由此可见,null处理起来还是有点麻烦,所以,建议在设计表的时候,不要允许null即可,给定默认值,而大部分默认值刚好可以与go的类型零值对应
 
 ## 已经支持的 laravel query builder 方法
 - [x] Table  
