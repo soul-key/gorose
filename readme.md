@@ -346,6 +346,32 @@ db().Table("users").MinTo("age", &min)
 ## 驱动
 只要实现了 gorose/driver.IDriver 接口即可,理论上可以支持任意数据库, 目前实现了mysql的支持, 可以开发更多接口的支持  
 
+## 数据库字段为null的处理
+```go
+type User struct {
+    Id  int64  `db:"id,pk"`
+    Sex *int8  `db:"sex"` // 使用指针可以绑定 null 值
+    Age sql.NullInt64 `db:"age"` // 使用sql.NullInt64 可以绑定 null 值
+}
+```
+指针赋值
+```go
+var sex = int8(1)
+var user = User{Id: 1, Sex: &sex}
+// 或者,快捷用法
+var user = User{Id: 1, Sex: gorose.Ptr(int8(1))}
+```
+sql.Null* 赋值
+```go
+var age = sql.NullInt64{Int64: 18, Valid: true}
+```
+sql.Null* 使用
+```go
+if age.Valid {
+    fmt.Println(age.Int64)
+}
+```
+
 ## 已经支持的 laravel query builder 方法
 - [x] Table  
 - [x] Select  
