@@ -18,8 +18,8 @@ package main
 
 import (
     gorose "github.com/gohouse/gorose/v3"
-    // 引入驱动,这里可以将驱动独立出去,避免多驱动的不必要引入,只要实现了 gorose.IDriver 接口即可,理论上可以支持任意数据库
-    _ "github.com/gohouse/gorose/v3/drivers/mysql"
+    // 引入mysql驱动
+    _ "github.com/go-sql-driver/mysql"
 )
 
 type User struct {
@@ -342,6 +342,9 @@ db().Table("users").MinTo("age", &min)
 
 ## 日志
 默认采用 官方库的 slog debug level, 如果不想显示sql日志, 只需要设置slog的level到debug以上即可, 如: Info, Warn, Error
+
+## 驱动
+只要实现了 gorose/driver.IDriver 接口即可,理论上可以支持任意数据库, 目前实现了mysql的支持, 可以开发更多接口的支持  
 
 ## 已经支持的 laravel query builder 方法
 - [x] Table  
