@@ -34,10 +34,10 @@ func (User) TableName() string {
     return "users"
 }
 
-var gr = gorose.Open("mysql", "root:123456@tcp(localhost:3306)/test?charset=utf8mb4&parseTime=true")
+var rose = gorose.Open("mysql", "root:123456@tcp(localhost:3306)/test?charset=utf8mb4&parseTime=true")
 
 func db() *gorose.Database {
-	return gr.NewDatabase()
+	return rose.NewDatabase()
 }
 func main() {
     // select id,name,email from users limit 1;
@@ -201,6 +201,13 @@ db().Table(sub).Where("id", ">", 1).Get()
 ```
 
 ## join
+```go
+type UserInfo struct {
+    UserId      int64   `db:"user_id"`
+    TableName   string  `db:"user_info"`
+}
+```
+
 - 简单用法
 ```go
 db().Table("users").Join(UserInfo{}, "user.id", "=", "user_info.user_id").Get()
@@ -208,10 +215,6 @@ db().Table("users").Join(UserInfo{}, "user.id", "=", "user_info.user_id").Get()
 
 - 取别名
 ```go
-type UserInfo struct {
-    UserId      int64   `db:"user_id"`
-    TableName   string  `db:"user_info"`
-}
 // select * from users a inner join user_info b on a.id=b.user_id
 db().Table("users", "u").Join(gorose.As(UserInfo{}, "b"), "u.id", "=", "b.user_id").Get()
 // 等同于
@@ -226,29 +229,48 @@ db().Table("users").Join(UserInfo{}, func(wh gorose.IJoinOn) {
 }).Get()
 ```
 
-## where
-- sub query
+## where sub
 ```go
 // where id in (select user_id from user_info)
 sub := db().Table("user_info").Select("user_id")
-xxx.Where("id", "in", sub).Get()
+db().Table(User{}).Where("id", "in", sub).Get()
 ```
+- where sub query
+```go
+// where id in (select user_id from user_info)
+db().Table(User{}).WhereSub("id", "in", func(tx *gorose.Context) {
+    tx.Table("user_info").Select("user_id")
+}).Get()
+```
+- where sub builder
+```go
+// where id in (select user_id from user_info)
+sub := db().Table("user_info").Select("user_id")
+db().Table(User{}).WhereBuilder("id", "in", sub).Get()
+```
+以上3种用法等同
 
-- where nested
+## where nested
 ```go
 // where id>1 and (sex=1 or sex=2)
-xxx.Where("id",">", 1).Where(func(wh gorose.IWhere) {
+db().Table(User{}).Where("id",">", 1).Where(func(wh gorose.IWhere) {
     wh.Where("sex", 1).OrWhere("sex", 2)
 })
 ```
+```go
+// where id>1 and (sex=1 or sex=2)
+db().Table(User{}).Where("id",">", 1).WhereNested(func(wh gorose.IWhere) {
+    wh.Where("sex", 1).OrWhere("sex", 2)
+})
+```
+以上两种用法等同
 
 ## Pluck
 返回两列数据到一个map中,第一列为value,第二列为key
 ```go
 // select id,name from users
 db().Table("users").Pluck("name", "id")
-// 返回 map[<id>]<name>
-// 得到 map[int64]string{1: "张三", 2: "李四"}
+// 返回 map[<id>]<name>, 实际得到 map[int64]string{1: "张三", 2: "李四"}
 ```
 
 ## List
@@ -256,8 +278,7 @@ db().Table("users").Pluck("name", "id")
 ```go
 // select id,name from users
 db().Table("users").List("id")
-// 返回 []<id>
-// 得到 []int64{1,2,3}
+// 返回 []<id>, 实际得到 []int64{1,2,3}
 ```
 
 ## To 查询结果绑定到对象
@@ -319,6 +340,8 @@ var min int
 db().Table("users").MinTo("age", &min)
 ```
 
+## 日志
+默认采用 官方库的 slog debug level, 如果不想显示sql日志, 只需要设置slog的level到debug以上即可, 如: Info, Warn, Error
 
 ## 已经支持的 laravel query builder 方法
 - [x] Table  
@@ -395,6 +418,14 @@ db().Table("users").MinTo("age", &min)
 - [x] Replace
 - [x] Page  
 - [x] LastSql  
+
+- [x] WhereBuilder  
+- [x] OrWhereBuilder  
+- [x] WhereSub  
+- [x] OrWhereSub  
+- [x] WhereNested  
+- [x] OrWhereNested  
+
 - [x] To  
 - [x] Bind  
 - [x] ListTo  
