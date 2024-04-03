@@ -1,4 +1,4 @@
-package gorose
+package parser
 
 import (
 	"database/sql/driver"
@@ -28,20 +28,20 @@ func StructsParse(obj any) (FieldTag []string, FieldStruct []string, pkField str
 	rfv := reflect.Indirect(reflect.ValueOf(obj))
 	switch rfv.Kind() {
 	case reflect.Struct:
-		return structsTypeParse(rfv.Type())
+		return StructsTypeParse(rfv.Type())
 	case reflect.Slice:
-		return structsTypeParse(rfv.Type())
+		return StructsTypeParse(rfv.Type())
 	default:
 		return
 	}
 }
 
-func structsTypeParse(rft reflect.Type) (fieldTag []string, fieldStruct []string, pkField string) {
+func StructsTypeParse(rft reflect.Type) (fieldTag []string, fieldStruct []string, pkField string) {
 	//rfv := reflect.Indirect(reflect.ValueOf(obj))
 	if rft.Kind() == reflect.Slice {
 		rft2 := rft.Elem()
 		if rft2.Kind() == reflect.Struct {
-			return structsTypeParse(rft2)
+			return StructsTypeParse(rft2)
 		}
 	} else {
 		for i := 0; i < rft.NumField(); i++ {
@@ -89,7 +89,7 @@ func structsTypeParse(rft reflect.Type) (fieldTag []string, fieldStruct []string
 //	}
 //}
 
-func structDataToMap(rfv reflect.Value, tags, fieldStruct []string, mustColumn ...string) (data map[string]any, err error) {
+func StructDataToMap(rfv reflect.Value, tags, fieldStruct []string, mustColumn ...string) (data map[string]any, err error) {
 	data = make(map[string]any)
 	for i, fieldName := range fieldStruct {
 		field := rfv.FieldByName(fieldName)
@@ -136,8 +136,8 @@ func structUpdateDataToMap(rfv reflect.Value, tags, fieldStruct []string, pkFiel
 func StructToDelete(obj any, mustColumn ...string) (data map[string]any, err error) {
 	rfv := reflect.Indirect(reflect.ValueOf(obj))
 	if rfv.Kind() == reflect.Struct {
-		tag, fieldStruct, _ := structsTypeParse(rfv.Type())
-		data, err = structDataToMap(rfv, tag, fieldStruct, mustColumn...)
+		tag, fieldStruct, _ := StructsTypeParse(rfv.Type())
+		data, err = StructDataToMap(rfv, tag, fieldStruct, mustColumn...)
 	}
 	return
 }
@@ -146,18 +146,18 @@ func StructsToInsert(obj any, mustColumn ...string) (datas []map[string]any, err
 	rfv := reflect.Indirect(reflect.ValueOf(obj))
 	switch rfv.Kind() {
 	case reflect.Struct:
-		fieldTag, fieldStruct, _ := structsTypeParse(rfv.Type())
+		fieldTag, fieldStruct, _ := StructsTypeParse(rfv.Type())
 		var data = make(map[string]any)
-		data, err = structDataToMap(rfv, fieldTag, fieldStruct, mustColumn...)
+		data, err = StructDataToMap(rfv, fieldTag, fieldStruct, mustColumn...)
 		if err != nil {
 			return
 		}
 		datas = append(datas, data)
 	case reflect.Slice:
-		tag, fieldStruct, _ := structsTypeParse(rfv.Type())
+		tag, fieldStruct, _ := StructsTypeParse(rfv.Type())
 		for i := 0; i < rfv.Len(); i++ {
 			var data = make(map[string]any)
-			data, err = structDataToMap(rfv.Index(i), tag, fieldStruct, mustColumn...)
+			data, err = StructDataToMap(rfv.Index(i), tag, fieldStruct, mustColumn...)
 			if err != nil {
 				return
 			}

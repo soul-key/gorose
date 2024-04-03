@@ -2,7 +2,8 @@ package gorose
 
 import (
 	"database/sql"
-	"math"
+	"github.com/gohouse/gorose/v3/builder"
+	_ "github.com/gohouse/gorose/v3/driver/mysql"
 )
 
 type GoRose struct {
@@ -14,10 +15,10 @@ type GoRose struct {
 	handlers HandlersChain
 }
 
-type HandlerFunc func(*Context)
+type HandlerFunc func(*builder.Context)
 type HandlersChain []HandlerFunc
 
-const abortIndex int8 = math.MaxInt8 >> 1
+//const abortIndex int8 = math.MaxInt8 >> 1
 
 //type handlers struct {
 //	handlers HandlersChain
@@ -44,6 +45,7 @@ func (g *GoRose) Use(h ...HandlerFunc) *GoRose {
 // examples
 //
 //	Open("mysql", "root:root@tcp(localhost:3306)/test?charset=utf8mb4&parseTime=true")
+//	Open(&Config{...})
 //	Open(&ConfigCluster{...})
 func Open(conf ...any) *GoRose {
 	var g = GoRose{}

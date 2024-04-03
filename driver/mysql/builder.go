@@ -3,8 +3,11 @@ package mysql
 import (
 	"errors"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/gohouse/gorose/v3"
+	"github.com/gohouse/gorose/v3/builder"
+	"github.com/gohouse/gorose/v3/parser"
+
+	//_ "github.com/go-sql-driver/mysql"
+	"github.com/gohouse/gorose/v3/driver"
 	"reflect"
 	"strings"
 )
@@ -16,10 +19,10 @@ type Builder struct {
 }
 
 func init() {
-	gorose.Register(DriverName, &Builder{})
+	driver.Register(DriverName, &Builder{})
 }
 
-func (b Builder) ToSql(c *gorose.Context) (sql4prepare string, binds []any, err error) {
+func (b Builder) ToSql(c *builder.Context) (sql4prepare string, binds []any, err error) {
 	selects, anies := b.ToSqlSelect(c)
 	table, binds2, err := b.ToSqlTable(c)
 	if err != nil {
@@ -49,7 +52,7 @@ func (b Builder) ToSql(c *gorose.Context) (sql4prepare string, binds []any, err 
 	return
 }
 
-func (Builder) ToSqlSelect(c *gorose.Context) (sql4prepare string, binds []any) {
+func (Builder) ToSqlSelect(c *builder.Context) (sql4prepare string, binds []any) {
 	var cols []string
 	for _, col := range c.SelectClause.Columns {
 		if col.IsRaw {
@@ -74,12 +77,12 @@ func (Builder) ToSqlSelect(c *gorose.Context) (sql4prepare string, binds []any) 
 	return
 }
 
-func (b Builder) ToSqlTable(c *gorose.Context) (sql4prepare string, binds []any, err error) {
+func (b Builder) ToSqlTable(c *builder.Context) (sql4prepare string, binds []any, err error) {
 	return b.buildSqlTable(c.TableClause, c.Prefix)
 }
 
-func (b Builder) buildSqlTable(tab gorose.TableClause, prefix string) (sql4prepare string, binds []any, err error) {
-	if v, ok := tab.Tables.(gorose.IBuilder); ok {
+func (b Builder) buildSqlTable(tab builder.TableClause, prefix string) (sql4prepare string, binds []any, err error) {
+	if v, ok := tab.Tables.(builder.IBuilder); ok {
 		sql4prepare, binds, err = v.ToSql()
 		if tab.Alias != "" {
 			sql4prepare = fmt.Sprintf("(%s) %s", sql4prepare, BackQuotes(tab.Alias))
@@ -106,34 +109,29 @@ func (b Builder) buildSqlTable(tab gorose.TableClause, prefix string) (sql4prepa
 	return strings.TrimSpace(fmt.Sprintf("%s %s", sql4prepare, BackQuotes(tab.Alias))), binds, err
 }
 
-func (b Builder) toSqlWhere(c *gorose.Context, wc gorose.WhereClause) (sql4prepare string, binds []any, err error) {
+func (b Builder) toSqlWhere(c *builder.Context, wc builder.WhereClause) (sql4prepare string, binds []any, err error) {
 	if len(wc.Conditions) == 0 {
 		return
 	}
 	var sql4prepareArr []string
 	for _, v := range wc.Conditions {
 		switch item := v.(type) {
-		case gorose.TypeWhereRaw:
-			//item := v.(gorose.TypeWhereRaw)
+		case builder.TypeWhereRaw:
 			sql4prepareArr = append(sql4prepareArr, fmt.Sprintf("%s %s", item.LogicalOp, item.Column))
 			binds = append(binds, item.Bindings...)
-		case gorose.TypeWhereStandard:
-			//item := v.(gorose.TypeWhereStandard)
+		case builder.TypeWhereStandard:
 			sql4prepareArr = append(sql4prepareArr, fmt.Sprintf("%s %s %s ?", item.LogicalOp, BackQuotes(item.Column), item.Operator))
 			binds = append(binds, item.Value)
-		case gorose.TypeWhereIn:
-			//item := v.(gorose.TypeWhereIn)
+		case builder.TypeWhereIn:
 			values := ToSlice(item.Value)
 			sql4prepareArr = append(sql4prepareArr, fmt.Sprintf("%s %s %s (%s)", item.LogicalOp, BackQuotes(item.Column), item.Operator, strings.Repeat("?,", len(values)-1)+"?"))
 			binds = append(binds, values...)
-		case gorose.TypeWhereBetween:
-			//item := v.(gorose.TypeWhereBetween)
+		case builder.TypeWhereBetween:
 			values := ToSlice(item.Value)
 			sql4prepareArr = append(sql4prepareArr, fmt.Sprintf("%s %s %s ? AND ?", item.LogicalOp, BackQuotes(item.Column), item.Operator))
 			binds = append(binds, values...)
-		case gorose.TypeWhereNested:
-			//item := v.(gorose.TypeWhereNested)
-			var tmp = gorose.Context{}
+		case builder.TypeWhereNested:
+			var tmp = builder.Context{}
 			item.WhereNested(&tmp.WhereClause)
 			prepare, anies, err := b.ToSqlWhere(&tmp)
 			if err != nil {
@@ -141,17 +139,15 @@ func (b Builder) toSqlWhere(c *gorose.Context, wc gorose.WhereClause) (sql4prepa
 			}
 			sql4prepareArr = append(sql4prepareArr, fmt.Sprintf("%s (%s)", item.LogicalOp, strings.TrimPrefix(prepare, "WHERE ")))
 			binds = append(binds, anies...)
-		case gorose.TypeWhereSubQuery:
-			//item := v.(gorose.TypeWhereSubQuery)
+		case builder.TypeWhereSubQuery:
 			query, anies, err := item.SubQuery.ToSql()
 			if err != nil {
 				return sql4prepare, binds, err
 			}
 			sql4prepareArr = append(sql4prepareArr, fmt.Sprintf("%s %s %s (%s)", item.LogicalOp, BackQuotes(item.Column), item.Operator, query))
 			binds = append(binds, anies...)
-		case gorose.TypeWhereSubHandler:
-			//item := v.(gorose.TypeWhereSubQuery)
-			var ctx = gorose.NewContext(c.Prefix)
+		case builder.TypeWhereSubHandler:
+			var ctx = builder.NewContext(c.Prefix)
 			item.Sub(ctx)
 			query, anies, err := b.ToSql(ctx)
 			if err != nil {
@@ -166,7 +162,7 @@ func (b Builder) toSqlWhere(c *gorose.Context, wc gorose.WhereClause) (sql4prepa
 	}
 	return
 }
-func (b Builder) ToSqlWhere(c *gorose.Context) (sql4prepare string, binds []any, err error) {
+func (b Builder) ToSqlWhere(c *builder.Context) (sql4prepare string, binds []any, err error) {
 	sql4prepare, binds, err = b.toSqlWhere(c, c.WhereClause)
 	if sql4prepare != "" {
 		if c.WhereClause.Not {
@@ -177,7 +173,7 @@ func (b Builder) ToSqlWhere(c *gorose.Context) (sql4prepare string, binds []any,
 	return
 }
 
-func (b Builder) ToSqlJoin(c *gorose.Context) (sql4prepare string, binds []any, err error) {
+func (b Builder) ToSqlJoin(c *builder.Context) (sql4prepare string, binds []any, err error) {
 	if c.JoinClause.Err != nil {
 		return sql4prepare, binds, c.JoinClause.Err
 	}
@@ -189,19 +185,19 @@ func (b Builder) ToSqlJoin(c *gorose.Context) (sql4prepare string, binds []any, 
 		var sql4 string
 		var bind []any
 		switch item := v.(type) {
-		case gorose.TypeJoinStandard:
+		case builder.TypeJoinStandard:
 			prepare, bind, err = b.buildSqlTable(item.TableClause, c.Prefix)
 			if err != nil {
 				return
 			}
 			sql4 = fmt.Sprintf("%s %s ON %s %s %s", item.Type, prepare, BackQuotes(item.Column1), item.Operator, BackQuotes(item.Column2))
-		case gorose.TypeJoinSub:
+		case builder.TypeJoinSub:
 			sql4, bind, err = item.ToSql()
 			if err != nil {
 				return
 			}
-		case gorose.TypeJoinOn:
-			var tjo gorose.TypeJoinOnCondition
+		case builder.TypeJoinOn:
+			var tjo builder.TypeJoinOnCondition
 			item.OnClause(&tjo)
 			if len(tjo.Conditions) == 0 {
 				return
@@ -219,7 +215,7 @@ func (b Builder) ToSqlJoin(c *gorose.Context) (sql4prepare string, binds []any, 
 	return
 }
 
-func (b Builder) ToSqlGroupBy(c *gorose.Context) (sql4prepare string) {
+func (b Builder) ToSqlGroupBy(c *builder.Context) (sql4prepare string) {
 	if len(c.GroupClause.Groups) > 0 {
 		var tmp []string
 		for _, col := range c.GroupClause.Groups {
@@ -233,14 +229,14 @@ func (b Builder) ToSqlGroupBy(c *gorose.Context) (sql4prepare string) {
 	}
 	return
 }
-func (b Builder) ToSqlHaving(c *gorose.Context) (sql4prepare string, binds []any, err error) {
+func (b Builder) ToSqlHaving(c *builder.Context) (sql4prepare string, binds []any, err error) {
 	sql4prepare, binds, err = b.toSqlWhere(c, c.HavingClause.WhereClause)
 	if sql4prepare != "" {
 		sql4prepare = fmt.Sprintf("HAVING %s", sql4prepare)
 	}
 	return
 }
-func (b Builder) ToSqlOrderBy(c *gorose.Context) (sql4prepare string) {
+func (b Builder) ToSqlOrderBy(c *builder.Context) (sql4prepare string) {
 	if len(c.OrderByClause.Columns) == 0 {
 		return
 	}
@@ -260,7 +256,7 @@ func (b Builder) ToSqlOrderBy(c *gorose.Context) (sql4prepare string) {
 	return
 }
 
-func (b Builder) ToSqlLimitOffset(c *gorose.Context) (sqlSegment string, binds []any) {
+func (b Builder) ToSqlLimitOffset(c *builder.Context) (sqlSegment string, binds []any) {
 	var offset int
 	if c.LimitOffsetClause.Offset > 0 {
 		offset = c.LimitOffsetClause.Offset
@@ -279,11 +275,9 @@ func (b Builder) ToSqlLimitOffset(c *gorose.Context) (sqlSegment string, binds [
 	return
 }
 
-//func (b Builder) ToSqlInsert(c *gorose.Context, obj any, ignoreCase string, onDuplicateKeys []string, mustColumn ...string) (sqlSegment string, binds []any, err error) {
-
 // ToSqlInsert insert
-func (b Builder) ToSqlInsert(c *gorose.Context, obj any, args ...gorose.TypeToSqlInsertCase) (sqlSegment string, binds []any, err error) {
-	var arg gorose.TypeToSqlInsertCase
+func (b Builder) ToSqlInsert(c *builder.Context, obj any, args ...builder.TypeToSqlInsertCase) (sqlSegment string, binds []any, err error) {
+	var arg builder.TypeToSqlInsertCase
 	if len(args) > 0 {
 		arg = args[0]
 	}
@@ -292,7 +286,7 @@ func (b Builder) ToSqlInsert(c *gorose.Context, obj any, args ...gorose.TypeToSq
 	switch rfv.Kind() {
 	case reflect.Struct:
 		var datas []map[string]any
-		datas, err = gorose.StructsToInsert(obj, arg.MustColumn...)
+		datas, err = parser.StructsToInsert(obj, arg.MustColumn...)
 		if err != nil {
 			return
 		}
@@ -303,7 +297,7 @@ func (b Builder) ToSqlInsert(c *gorose.Context, obj any, args ...gorose.TypeToSq
 		case reflect.Struct:
 			c.TableClause.Table(obj)
 			var datas []map[string]any
-			datas, err = gorose.StructsToInsert(obj, arg.MustColumn...)
+			datas, err = parser.StructsToInsert(obj, arg.MustColumn...)
 			if err != nil {
 				return
 			}
@@ -316,12 +310,12 @@ func (b Builder) ToSqlInsert(c *gorose.Context, obj any, args ...gorose.TypeToSq
 	}
 }
 
-func (b Builder) ToSqlDelete(c *gorose.Context, obj any, mustColumn ...string) (sqlSegment string, binds []any, err error) {
+func (b Builder) ToSqlDelete(c *builder.Context, obj any, mustColumn ...string) (sqlSegment string, binds []any, err error) {
 	var ctx = *c
 	rfv := reflect.Indirect(reflect.ValueOf(obj))
 	switch rfv.Kind() {
 	case reflect.Struct:
-		data, err := gorose.StructToDelete(obj, mustColumn...)
+		data, err := parser.StructToDelete(obj, mustColumn...)
 		if err != nil {
 			return sqlSegment, binds, err
 		}
@@ -337,22 +331,22 @@ func (b Builder) ToSqlDelete(c *gorose.Context, obj any, mustColumn ...string) (
 	return
 }
 
-func (b Builder) ToSqlUpdate(c *gorose.Context, arg any) (sqlSegment string, binds []any, err error) {
+func (b Builder) ToSqlUpdate(c *builder.Context, arg any) (sqlSegment string, binds []any, err error) {
 	switch v := arg.(type) {
-	case gorose.TypeToSqlUpdateCase:
+	case builder.TypeToSqlUpdateCase:
 		return b.toSqlUpdate(c, v.BindOrData, v.MustColumn...)
-	case gorose.TypeToSqlIncDecCase:
+	case builder.TypeToSqlIncDecCase:
 		return b.toSqlIncDec(c, v.Symbol, v.Data)
 	default:
 		return
 	}
 }
 
-func (b Builder) toSqlUpdate(c *gorose.Context, obj any, mustColumn ...string) (sqlSegment string, binds []any, err error) {
+func (b Builder) toSqlUpdate(c *builder.Context, obj any, mustColumn ...string) (sqlSegment string, binds []any, err error) {
 	rfv := reflect.Indirect(reflect.ValueOf(obj))
 	switch rfv.Kind() {
 	case reflect.Struct:
-		dataMap, pk, pkValue, err := gorose.StructToUpdate(obj, mustColumn...)
+		dataMap, pk, pkValue, err := parser.StructToUpdate(obj, mustColumn...)
 		if err != nil {
 			return sqlSegment, binds, err
 		}
@@ -370,7 +364,7 @@ func (b Builder) toSqlUpdate(c *gorose.Context, obj any, mustColumn ...string) (
 	}
 }
 
-func (b Builder) toSqlIncDec(c *gorose.Context, symbol string, data map[string]any) (sql4prepare string, values []any, err error) {
+func (b Builder) toSqlIncDec(c *builder.Context, symbol string, data map[string]any) (sql4prepare string, values []any, err error) {
 	prepare, anies, err := b.ToSqlTable(c)
 	if err != nil {
 		return sql4prepare, values, err

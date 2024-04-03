@@ -3,34 +3,22 @@ package gorose
 import (
 	"database/sql"
 	"fmt"
+	"github.com/gohouse/gorose/v3/builder"
+	"github.com/gohouse/gorose/v3/driver"
 	"reflect"
 )
 
-type IBuilder interface {
-	ToSql() (sql4prepare string, binds []any, err error)
-	ToSqlSelect() (sql4prepare string, binds []any)
-	ToSqlTable() (sql4prepare string, values []any, err error)
-	ToSqlJoin() (sql4prepare string, binds []any, err error)
-	ToSqlWhere() (sql4prepare string, values []any, err error)
-	ToSqlOrderBy() (sql4prepare string)
-	ToSqlLimitOffset() (sqlSegment string, binds []any)
-	ToSqlInsert(obj any, args ...TypeToSqlInsertCase) (sqlSegment string, binds []any, err error)
-	ToSqlDelete(obj any, mustColumn ...string) (sqlSegment string, binds []any, err error)
-	ToSqlUpdate(obj any, mustColumn ...string) (sqlSegment string, binds []any, err error)
-	ToSqlIncDec(symbol string, data map[string]any) (sql4prepare string, values []any, err error)
-}
-
 type Database struct {
 	*Engin
-	Driver  IDriver
-	Context *Context
+	Driver  driver.IDriver
+	Context *builder.Context
 }
 
 func NewDatabase(g *GoRose) *Database {
 	return &Database{
-		Driver:  GetDriver(g.driver),
+		Driver:  driver.GetDriver(g.driver),
 		Engin:   NewEngin(g),
-		Context: NewContext(g.prefix),
+		Context: builder.NewContext(g.prefix),
 	}
 }
 func (db *Database) Table(table any, alias ...string) *Database {
@@ -228,7 +216,7 @@ func (db *Database) queryToBindResult(bind any, query string, args ...any) (err 
 	return db.Engin.QueryTo(bind, query, args...)
 }
 
-func (db *Database) insert(obj any, arg TypeToSqlInsertCase) (res sql.Result, err error) {
+func (db *Database) insert(obj any, arg builder.TypeToSqlInsertCase) (res sql.Result, err error) {
 	//segment, binds, err := db.ToSqlInsert(obj, ignoreCase, onDuplicateKeys, mustColumn...)
 	segment, binds, err := db.ToSqlInsert(obj, arg)
 	if err != nil {
@@ -237,7 +225,7 @@ func (db *Database) insert(obj any, arg TypeToSqlInsertCase) (res sql.Result, er
 	return db.Engin.Exec(segment, binds...)
 }
 func (db *Database) Insert(obj any, mustColumn ...string) (affectedRows int64, err error) {
-	result, err := db.insert(obj, TypeToSqlInsertCase{MustColumn: mustColumn})
+	result, err := db.insert(obj, builder.TypeToSqlInsertCase{MustColumn: mustColumn})
 	if err != nil {
 		return affectedRows, err
 	}
@@ -248,7 +236,7 @@ func (db *Database) Insert(obj any, mustColumn ...string) (affectedRows int64, e
 //
 // 参考 https://laravel.com/docs/10.x/queries#auto-incrementing-ids
 func (db *Database) InsertGetId(obj any, mustColumn ...string) (lastInsertId int64, err error) {
-	result, err := db.insert(obj, TypeToSqlInsertCase{MustColumn: mustColumn})
+	result, err := db.insert(obj, builder.TypeToSqlInsertCase{MustColumn: mustColumn})
 	if err != nil {
 		return lastInsertId, err
 	}
@@ -259,7 +247,7 @@ func (db *Database) InsertGetId(obj any, mustColumn ...string) (lastInsertId int
 //
 // 参考 https://laravel.com/docs/10.x/queries#insert-statements
 func (db *Database) InsertOrIgnore(obj any, mustColumn ...string) (affectedRows int64, err error) {
-	result, err := db.insert(obj, TypeToSqlInsertCase{IsIgnoreCase: true, MustColumn: mustColumn})
+	result, err := db.insert(obj, builder.TypeToSqlInsertCase{IsIgnoreCase: true, MustColumn: mustColumn})
 	if err != nil {
 		return affectedRows, err
 	}
@@ -273,7 +261,7 @@ func (db *Database) InsertOrIgnore(obj any, mustColumn ...string) (affectedRows 
 //
 //	eg: Upsert(obj, []string{"id"}, []string{"age"}, "id", "name")
 func (db *Database) Upsert(obj any, onDuplicateKeys, updateFields []string, mustColumn ...string) (affectedRows int64, err error) {
-	result, err := db.insert(obj, TypeToSqlInsertCase{OnDuplicateKeys: onDuplicateKeys, UpdateFields: updateFields, MustColumn: mustColumn})
+	result, err := db.insert(obj, builder.TypeToSqlInsertCase{OnDuplicateKeys: onDuplicateKeys, UpdateFields: updateFields, MustColumn: mustColumn})
 	if err != nil {
 		return affectedRows, err
 	}
@@ -284,7 +272,7 @@ func (db *Database) Upsert(obj any, onDuplicateKeys, updateFields []string, must
 //
 // 参考 mysql replace into 用法
 func (db *Database) Replace(obj any, mustColumn ...string) (affectedRows int64, err error) {
-	result, err := db.insert(obj, TypeToSqlInsertCase{IsReplace: true, MustColumn: mustColumn})
+	result, err := db.insert(obj, builder.TypeToSqlInsertCase{IsReplace: true, MustColumn: mustColumn})
 	if err != nil {
 		return affectedRows, err
 	}
@@ -421,7 +409,7 @@ func (db *Database) DoesntExist(bind ...any) (b bool, err error) {
 	b, err = db.Exists(bind...)
 	return !b, err
 }
-func (db *Database) Union(b IBuilder, unionAll ...bool) (res []map[string]any, err error) {
+func (db *Database) Union(b builder.IBuilder, unionAll ...bool) (res []map[string]any, err error) {
 	prepare, values, err := db.ToSql()
 	if err != nil {
 		return res, err
@@ -437,7 +425,7 @@ func (db *Database) Union(b IBuilder, unionAll ...bool) (res []map[string]any, e
 	err = db.queryToBindResult(&res, fmt.Sprintf("%s %s %s", prepare, union, sql4prepare), append(values, binds...))
 	return
 }
-func (db *Database) UnionAll(b IBuilder) (res []map[string]any, err error) {
+func (db *Database) UnionAll(b builder.IBuilder) (res []map[string]any, err error) {
 	return db.Union(b, true)
 }
 
@@ -451,14 +439,14 @@ func (db *Database) Truncate(obj ...any) (affectedRows int64, err error) {
 	if err != nil {
 		return
 	}
-	return db.Engin.execute(fmt.Sprintf("TRUNCATE TABLE %s", BackQuotes(table)))
+	return db.Engin.execute(fmt.Sprintf("TRUNCATE TABLE %s", table))
 }
 
 type TxHandler func() *Database
 
 func (db *Database) Begin() (tx TxHandler, err error) {
 	return func() *Database {
-		db.Context = NewContext(db.prefix)
+		db.Context = builder.NewContext(db.prefix)
 		return db
 	}, db.Engin.Begin()
 }

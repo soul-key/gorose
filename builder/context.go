@@ -1,4 +1,4 @@
-package gorose
+package builder
 
 type Context struct {
 	TableClause       TableClause

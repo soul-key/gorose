@@ -8,9 +8,11 @@
 //	db.xxx.LeftJoin(xxx, <same as before>)
 //	db.Table(gorose.As("users", "a")).Join(gorose.As("card", "b"), "a.id", "b.uid")
 
-package gorose
+package builder
 
-import "errors"
+import (
+	"errors"
+)
 
 type IJoinOn interface {
 	On(column string, args ...string) IJoinOn

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/gohouse/gorose/v3/parser"
 	"log/slog"
 	"reflect"
 )
@@ -154,7 +155,7 @@ func (s *Engin) rowsToBind(rows *sql.Rows, bind any) (err error) {
 
 func (s *Engin) rowsToStruct(rows *sql.Rows, rfv reflect.Value) error {
 	//FieldTag, FieldStruct, _ := structsParse(rfv)
-	FieldTag, FieldStruct, _ := structsTypeParse(rfv.Type())
+	FieldTag, FieldStruct, _ := parser.StructsTypeParse(rfv.Type())
 
 	defer rows.Close()
 
@@ -167,14 +168,6 @@ func (s *Engin) rowsToStruct(rows *sql.Rows, rfv reflect.Value) error {
 	count := len(columns)
 
 	for rows.Next() {
-		// 要先扫描到map, 再做字段比对, 因为这里不确定具体字段数量
-		// 主要针对 select * 或者直接sql语句
-		//todo 如果是由struct转换而来, 可以新开一个方法, 不需要做转换比对过程
-		//entry, err := s.rowsToMapSingle(rows, columns, count)
-		//if err != nil {
-		//	return err
-		//}
-
 		if rfv.Kind() == reflect.Slice {
 			rfvItem := reflect.Indirect(reflect.New(rfv.Type().Elem()))
 			err = s.scanStructRow(rfvItem, rows, count, FieldTag, FieldStruct, columns)

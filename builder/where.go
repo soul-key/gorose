@@ -1,4 +1,4 @@
-package gorose
+package builder
 
 import (
 	"errors"
@@ -388,6 +388,10 @@ func (w *WhereClause) whereExists(clause IBuilder, not ...bool) IWhere {
 func (w *WhereClause) WhereNot(column any, args ...any) IWhere {
 	w.Not = true
 	return w.Where(column, args...)
+}
+func (w *WhereClause) OrWhereNot(column any, args ...any) IWhere {
+	w.Not = true
+	return w.OrWhere(column, args...)
 }
 
 func (w *WhereClause) addTypeWhereRaw(boolean string, value string, bindings []any) *WhereClause {

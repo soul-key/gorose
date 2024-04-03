@@ -1,4 +1,4 @@
-package gorose
+package builder
 
 type TypeGroupItem struct {
 	Column string

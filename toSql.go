@@ -3,40 +3,10 @@ package gorose
 import (
 	"errors"
 	"fmt"
+	"github.com/gohouse/gorose/v3/builder"
+	"github.com/gohouse/gorose/v3/parser"
 	"reflect"
 )
-
-//type TypeToSqlExists struct {
-//	Bindings []any
-//}
-//type TypeToSqlPessimisticLocking struct {
-//	LockType string
-//}
-//type TypeToSqlAggregate struct {
-//	CallFunc, Column string
-//}
-
-type TypeToSqlUpdateCase struct {
-	BindOrData any
-	MustColumn []string
-}
-
-//type TypeToSqlDeleteCase struct {
-//	Bind       any
-//	MustColumn []string
-//}
-
-type TypeToSqlIncDecCase struct {
-	Symbol string
-	Data   map[string]any
-}
-type TypeToSqlInsertCase struct {
-	IsReplace       bool
-	IsIgnoreCase    bool
-	OnDuplicateKeys []string
-	UpdateFields    []string
-	MustColumn      []string
-}
 
 func (db *Database) ToSqlSelect() (sql4prepare string, binds []any) {
 	return db.Driver.ToSqlSelect(db.Context)
@@ -79,7 +49,7 @@ func (db *Database) ToSqlExists(bind ...any) (sql4prepare string, values []any, 
 
 func (db *Database) ToSqlAggregate(function, column string) (sql4prepare string, values []any, err error) {
 	var ctx = *db.Context
-	ctx.SelectClause.Columns = append(ctx.SelectClause.Columns, Column{
+	ctx.SelectClause.Columns = append(ctx.SelectClause.Columns, builder.Column{
 		Name:  fmt.Sprintf("%s(%s)", function, column),
 		Alias: function,
 		IsRaw: true,
@@ -90,11 +60,11 @@ func (db *Database) ToSqlAggregate(function, column string) (sql4prepare string,
 
 func (db *Database) ToSqlTo(obj any, mustColumn ...string) (sql4prepare string, binds []any, err error) {
 	rfv := reflect.Indirect(reflect.ValueOf(obj))
-	columns, fieldStruct, _ := StructsParse(obj)
+	columns, fieldStruct, _ := parser.StructsParse(obj)
 	switch rfv.Kind() {
 	case reflect.Struct:
 		var data = make(map[string]any)
-		data, err = structDataToMap(rfv, columns, fieldStruct, mustColumn...)
+		data, err = parser.StructDataToMap(rfv, columns, fieldStruct, mustColumn...)
 		if err != nil {
 			return
 		}
@@ -109,7 +79,7 @@ func (db *Database) ToSqlTo(obj any, mustColumn ...string) (sql4prepare string, 
 	return
 }
 
-func (db *Database) ToSqlInsert(obj any, args ...TypeToSqlInsertCase) (sqlSegment string, binds []any, err error) {
+func (db *Database) ToSqlInsert(obj any, args ...builder.TypeToSqlInsertCase) (sqlSegment string, binds []any, err error) {
 	return db.Driver.ToSqlInsert(db.Context, obj, args...)
 }
 func (db *Database) ToSqlDelete(obj any, mustColumn ...string) (sqlSegment string, binds []any, err error) {
@@ -117,9 +87,9 @@ func (db *Database) ToSqlDelete(obj any, mustColumn ...string) (sqlSegment strin
 }
 
 func (db *Database) ToSqlUpdate(obj any, mustColumn ...string) (sqlSegment string, binds []any, err error) {
-	return db.Driver.ToSqlUpdate(db.Context, TypeToSqlUpdateCase{obj, mustColumn})
+	return db.Driver.ToSqlUpdate(db.Context, builder.TypeToSqlUpdateCase{obj, mustColumn})
 }
 func (db *Database) ToSqlIncDec(symbol string, data map[string]any) (sql4prepare string, values []any, err error) {
 	//return db.Driver.ToSqlIncDec(db.Context, symbol, data)
-	return db.Driver.ToSqlUpdate(db.Context, TypeToSqlIncDecCase{symbol, data})
+	return db.Driver.ToSqlUpdate(db.Context, builder.TypeToSqlIncDecCase{symbol, data})
 }

@@ -1,4 +1,4 @@
-package gorose
+package builder
 
 import "strings"
 

@@ -1,4 +1,4 @@
-package gorose
+package builder
 
 type OrderByItem struct {
 	Column    string
@@ -22,6 +22,8 @@ func (db *OrderByClause) OrderBy(column string, directions ...string) {
 		Direction: direction,
 	})
 }
+
+// OrderByRaw adds a Raw ORDER BY clause to the query.
 func (db *OrderByClause) OrderByRaw(column string) {
 	db.Columns = append(db.Columns, OrderByItem{
 		Column: column,

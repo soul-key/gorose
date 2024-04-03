@@ -3,18 +3,19 @@ package mysql
 import (
 	"errors"
 	"fmt"
-	"github.com/gohouse/gorose/v3"
+	"github.com/gohouse/gorose/v3/builder"
+	"github.com/gohouse/gorose/v3/parser"
 	"reflect"
 	"sort"
 	"strings"
 )
 
 func (b Builder) buildTableName(rft reflect.Type, prefix string) (tab string) {
-	return BackQuotes(fmt.Sprintf("%s%s", prefix, gorose.StructsToTableName(rft)))
+	return BackQuotes(fmt.Sprintf("%s%s", prefix, parser.StructsToTableName(rft)))
 }
 
 // func (b Builder) toSqlInsert(c *gorose.Context, data any, ignoreCase string, onDuplicateKeys []string) (sql4prepare string, values []any, err error) {
-func (b Builder) toSqlInsert(c *gorose.Context, data any, insertCase gorose.TypeToSqlInsertCase) (sql4prepare string, values []any, err error) {
+func (b Builder) toSqlInsert(c *builder.Context, data any, insertCase builder.TypeToSqlInsertCase) (sql4prepare string, values []any, err error) {
 	rfv := reflect.Indirect(reflect.ValueOf(data))
 	var fields []string
 	var valuesPlaceholderArr []string
@@ -90,7 +91,7 @@ func (b Builder) toSqlInsert(c *gorose.Context, data any, insertCase gorose.Type
 	return
 }
 
-func (b Builder) toSqlUpdateReal(c *gorose.Context, data any) (sql4prepare string, values []any, err error) {
+func (b Builder) toSqlUpdateReal(c *builder.Context, data any) (sql4prepare string, values []any, err error) {
 	rfv := reflect.Indirect(reflect.ValueOf(data))
 	var updates []string
 	switch rfv.Kind() {
@@ -123,7 +124,7 @@ func (b Builder) toSqlUpdateReal(c *gorose.Context, data any) (sql4prepare strin
 	return
 }
 
-func (b Builder) toSqlDelete(c *gorose.Context) (sql4prepare string, values []any, err error) {
+func (b Builder) toSqlDelete(c *builder.Context) (sql4prepare string, values []any, err error) {
 	var tables string
 	tables, _, err = b.ToSqlTable(c)
 	if err != nil {
