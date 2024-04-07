@@ -459,7 +459,11 @@ func (db *Database) Transaction(closure ...func(TxHandler) error) (err error) {
 	for _, v := range closure {
 		err = v(tx)
 		if err != nil {
-			return db.Rollback()
+			err2 := db.Rollback()
+			if err2 != nil {
+				return err2
+			}
+			return err
 		}
 	}
 	return db.Commit()
