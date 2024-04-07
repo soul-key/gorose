@@ -451,7 +451,7 @@ func (db *Database) Begin() (tx TxHandler, err error) {
 	}, db.Engin.Begin()
 }
 
-func (db *Database) Transaction(closure ...func(TxHandler) error) (err error) {
+func (db *Database) Transaction(closure ...func(TxHandler) error) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
