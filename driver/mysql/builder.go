@@ -369,18 +369,20 @@ func (b Builder) toSqlIncDec(c *builder.Context, symbol string, data map[string]
 	if err != nil {
 		return sql4prepare, values, err
 	}
-	where, val, err := b.ToSqlWhere(c)
-	if err != nil {
-		return sql4prepare, values, err
-	}
 	values = append(values, anies...)
-	values = append(values, val...)
 
 	var tmp []string
 	for k, v := range data {
 		tmp = append(tmp, fmt.Sprintf("%s=%s%s?", BackQuotes(k), BackQuotes(k), symbol))
 		values = append(values, v)
 	}
+
+	where, val, err := b.ToSqlWhere(c)
+	if err != nil {
+		return sql4prepare, values, err
+	}
+	values = append(values, val...)
+
 	sql4prepare = fmt.Sprintf("UPDATE %s SET %s %s", prepare, strings.Join(tmp, ","), where)
 	return
 }
