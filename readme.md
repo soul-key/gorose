@@ -224,7 +224,7 @@ db().Table(User{}, "u").Join(gorose.As("user_info", "b"), "u.id", "=", "b.user_i
 
 - 复杂用法
 ```go
-db().Table("users").Join(UserInfo{}, func(wh gorose.IJoinOn) {
+db().Table("users").Join(UserInfo{}, func(wh builder.IJoinOn) {
     wh.On("a.id", "b.user_id").OrOn("a.sex", "b.sex")
 }).Get()
 ```
@@ -238,7 +238,7 @@ db().Table(User{}).Where("id", "in", sub).Get()
 - where sub query
 ```go
 // where id in (select user_id from user_info)
-db().Table(User{}).WhereSub("id", "in", func(tx *gorose.Context) {
+db().Table(User{}).WhereSub("id", "in", func(tx *builder.Context) {
     tx.Table("user_info").Select("user_id")
 }).Get()
 ```
@@ -253,13 +253,13 @@ db().Table(User{}).WhereBuilder("id", "in", sub).Get()
 ## where nested
 ```go
 // where id>1 and (sex=1 or sex=2)
-db().Table(User{}).Where("id",">", 1).Where(func(wh gorose.IWhere) {
+db().Table(User{}).Where("id",">", 1).Where(func(wh builder.IWhere) {
     wh.Where("sex", 1).OrWhere("sex", 2)
 })
 ```
 ```go
 // where id>1 and (sex=1 or sex=2)
-db().Table(User{}).Where("id",">", 1).WhereNested(func(wh gorose.IWhere) {
+db().Table(User{}).Where("id",">", 1).WhereNested(func(wh builder.IWhere) {
     wh.Where("sex", 1).OrWhere("sex", 2)
 })
 ```
