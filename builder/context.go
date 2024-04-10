@@ -9,6 +9,7 @@ type Context struct {
 	HavingClause      HavingClause
 	OrderByClause     OrderByClause
 	LimitOffsetClause LimitOffsetClause
+	UnionClause       UnionClause
 
 	PessimisticLocking string
 	Prefix             string

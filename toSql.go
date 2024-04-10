@@ -34,6 +34,7 @@ func (db *Database) ToSqlLimitOffset() (sqlSegment string, binds []any) {
 func (db *Database) ToSql() (sql4prepare string, values []any, err error) {
 	return db.Driver.ToSql(db.Context)
 }
+
 func (db *Database) ToSqlExists(bind ...any) (sql4prepare string, values []any, err error) {
 	if len(bind) > 0 {
 		sql4prepare, values, err = db.ToSqlTo(bind[0])

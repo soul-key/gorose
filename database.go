@@ -409,24 +409,15 @@ func (db *Database) DoesntExist(bind ...any) (b bool, err error) {
 	b, err = db.Exists(bind...)
 	return !b, err
 }
-func (db *Database) Union(b builder.IBuilder, unionAll ...bool) (res []map[string]any, err error) {
-	prepare, values, err := db.ToSql()
-	if err != nil {
-		return res, err
-	}
-	sql4prepare, binds, err := b.ToSql()
-	if err != nil {
-		return res, err
-	}
-	var union = "UNION"
-	if len(unionAll) > 0 && unionAll[0] {
-		union = "UNION ALL"
-	}
-	err = db.queryToBindResult(&res, fmt.Sprintf("%s %s %s", prepare, union, sql4prepare), append(values, binds...))
-	return
+
+func (db *Database) Union(b ...builder.IBuilder) *Database {
+	db.Context.UnionClause.Union(b...)
+	return db
 }
-func (db *Database) UnionAll(b builder.IBuilder) (res []map[string]any, err error) {
-	return db.Union(b, true)
+
+func (db *Database) UnionAll(b ...builder.IBuilder) *Database {
+	db.Context.UnionClause.UnionAll(b...)
+	return db
 }
 
 func (db *Database) Truncate(obj ...any) (affectedRows int64, err error) {

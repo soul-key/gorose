@@ -265,6 +265,37 @@ db().Table(User{}).Where("id",">", 1).WhereNested(func(wh builder.IWhere) {
 ```
 以上两种用法等同
 
+## 子查询
+Table,Where,Join内都可以用子查询
+```go
+sub := db().Table("user").Where().OrWhere()
+sub2 := db().Table("address").Select("user_id").Where().OrWhere()
+sub3 := db().Table("user_info").Select("user_id").Where().OrWhere()
+```
+用在 Table,Where,Join 内
+```go
+db().
+    Table(sub, "a").
+    Join(gorose.As(sub2, "b"), "a.id", "=", "b.user_id")).
+    WhereIn("a.id", sub3).
+    Get()
+```
+用在 Union,UnionAll 内
+```go
+db().
+    Table("users").
+    Union(sub).
+    Get()
+```
+```go
+var sub2222 = db().Table("user").Where().OrWhere()
+var to []User
+db().
+    Table("users").
+    UnionAll(sub, sub2222).
+    To(&to)
+```
+
 ## Pluck
 返回两列数据到一个map中,第一列为value,第二列为key
 ```go
@@ -463,4 +494,5 @@ if age.Valid {
 - [x] ValueTo  
 - [x] SumTo  
 - [x] MaxTo  
-- [x] MinTo  
+- [x] UnionTo  
+- [x] UnionAllTo  

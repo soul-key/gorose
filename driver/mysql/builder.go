@@ -23,6 +23,27 @@ func init() {
 }
 
 func (b Builder) ToSql(c *builder.Context) (sql4prepare string, binds []any, err error) {
+	sql4prepare, binds, err = b.toSql(c)
+	if len(c.UnionClause.Unions) > 0 {
+		for _, u := range c.UnionClause.Unions {
+			sql4prepare2, binds2, err2 := u.ToSql()
+			if err2 != nil {
+				return
+			}
+			if sql4prepare2 == "" {
+				continue
+			}
+			var unions = "UNION"
+			if u.IsUnionAll {
+				unions = "UNION ALL"
+			}
+			sql4prepare = fmt.Sprintf("%s %s %s", sql4prepare, unions, sql4prepare2)
+			binds = append(binds, binds2...)
+		}
+	}
+	return
+}
+func (b Builder) toSql(c *builder.Context) (sql4prepare string, binds []any, err error) {
 	selects, anies := b.ToSqlSelect(c)
 	table, binds2, err := b.ToSqlTable(c)
 	if err != nil {
