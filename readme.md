@@ -57,28 +57,23 @@ func main() {
     db().Delete(&user) 
 }
 ```
-php风格用法
+php风格用法 和 go风格用法对比
 ```go
-// select id,name,email from users where id=1 or name="test" group by id having id>1 order by id desc limit 2 offset 2
+// select id,name,email from users where id=1 and name="test"
 db().Table("users").
     Select("id","name","email").
-    Where("id", "=", 1).OrWhere("name", "test").
-    GroupBy("id").Having("id", ">", 1).
-    Limit(2).Offset(2).OrderBy("id", "desc").
-    Get()
+    Where("id", "=", 1).Where("name", "test").
+    First()
 // 等同于
-var users []User
-db().Where("id", "=", 1).OrWhere("name", "test").
-    GroupBy("id").Having("id", ">", 1).
-    Limit(2).Offset(2).OrderBy("id", "desc").
-    To(&users)
+var user = User{Id: 1, Name: "test"}
+db().To(&user)
 ```
 由此可以看出, 除了对 表 模型的绑定区别, 其他方法通用
 
 ## 配置
 单数据库连接, 可以直接同官方接口一样用法
 ```go
-var gr = gorose.Open("mysql", "root:123456@tcp(localhost:3306)/test?charset=utf8mb4&parseTime=true")
+var rose = gorose.Open("mysql", "root:123456@tcp(localhost:3306)/test?charset=utf8mb4&parseTime=true")
 ```
 也可以用
 ```go
@@ -92,11 +87,11 @@ var conf1 = gorose.Config{
     ConnMaxLifetime: 0,
     ConnMaxIdleTime: 0,
 }
-var gr = gorose.Open(conf)
+var rose = gorose.Open(conf)
 ```
 或者使用读写分离集群,事务内,自动强制从写库读数据
 ```go
-var gr = gorose.Open(
+var rose = gorose.Open(
     gorose.ConfigCluster{
         WriteConf: []gorose.Config{
             conf1,
