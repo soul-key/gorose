@@ -142,7 +142,8 @@ func (s *Engin) rowsToBind(rows *sql.Rows, bind any) (err error) {
 		case reflect.Struct:
 			return s.rowsToStruct(rows, rfv)
 		default:
-			return errors.New("only struct(slice) or map(slice) supported")
+			return s.rowsToSliceOnly(rows, rfv)
+			//return errors.New("only struct(slice) or map(slice) supported")
 		}
 	case reflect.Map:
 		return s.rowsToMap(rows, rfv)
@@ -267,6 +268,19 @@ func (s *Engin) rowsToMap(rows *sql.Rows, rfv reflect.Value) error {
 		} else {
 			rfv.Set(reflect.ValueOf(entry))
 		}
+	}
+	return nil
+}
+func (s *Engin) rowsToSliceOnly(rows *sql.Rows, rfv reflect.Value) error {
+	defer rows.Close()
+
+	for rows.Next() {
+		val := reflect.Indirect(reflect.New(rfv.Type().Elem()))
+		err := rows.Scan(val.Addr().Interface())
+		if err != nil {
+			return err
+		}
+		rfv.Set(reflect.Append(rfv, val))
 	}
 	return nil
 }

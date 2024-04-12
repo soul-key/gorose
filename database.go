@@ -501,13 +501,17 @@ func (db *Database) Bind(obj any) (err error) {
 
 // ListTo 获取指定列的值列表。
 func (db *Database) ListTo(column string, obj any) (err error) {
+	return db.Select(column).toBind(obj)
+}
+func (db *Database) ListTo2(column string, obj any) (err error) {
 	ress, err := db.Get(column)
 	if err != nil {
 		return err
 	}
 	rfv := reflect.Indirect(reflect.ValueOf(obj))
 	for _, v := range ress {
-		rfv.Set(reflect.Append(rfv, reflect.ValueOf(v[column])))
+		rfv2 := reflect.ValueOf(v)
+		rfv.Set(reflect.Append(rfv, rfv2.MapIndex(rfv2.MapKeys()[0])))
 	}
 	return
 }
@@ -527,6 +531,13 @@ func (db *Database) PluckTo(column string, keyColumn string, obj any) (err error
 
 // ValueTo 获取指定字段的值,并绑定到给定的变量中
 func (db *Database) ValueTo(column string, obj any) (err error) {
+	prepare, values, err := db.Select(column).ToSql()
+	if err != nil {
+		return err
+	}
+	return db.QueryRow(prepare, values...).Scan(obj)
+}
+func (db *Database) ValueTo2(column string, obj any) (err error) {
 	first, err := db.First(column)
 	if err != nil {
 		return err
