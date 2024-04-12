@@ -6,6 +6,7 @@ import (
 	"github.com/gohouse/gorose/v3/builder"
 	"github.com/gohouse/gorose/v3/driver"
 	"reflect"
+	"strings"
 )
 
 type Database struct {
@@ -503,18 +504,6 @@ func (db *Database) Bind(obj any) (err error) {
 func (db *Database) ListTo(column string, obj any) (err error) {
 	return db.Select(column).toBind(obj)
 }
-func (db *Database) ListTo2(column string, obj any) (err error) {
-	ress, err := db.Get(column)
-	if err != nil {
-		return err
-	}
-	rfv := reflect.Indirect(reflect.ValueOf(obj))
-	for _, v := range ress {
-		rfv2 := reflect.ValueOf(v)
-		rfv.Set(reflect.Append(rfv, rfv2.MapIndex(rfv2.MapKeys()[0])))
-	}
-	return
-}
 
 // PluckTo 从查询结果集中获取键值对列表。
 func (db *Database) PluckTo(column string, keyColumn string, obj any) (err error) {
@@ -524,7 +513,15 @@ func (db *Database) PluckTo(column string, keyColumn string, obj any) (err error
 	}
 	rfv := reflect.Indirect(reflect.ValueOf(obj))
 	for _, v := range ress {
-		rfv.SetMapIndex(reflect.ValueOf(v[keyColumn]), reflect.ValueOf(v[column]))
+		rfv2 := reflect.ValueOf(v)
+		keys := rfv2.MapKeys()
+		key0 := keys[0].String()
+		key1 := keys[1].String()
+		if strings.HasSuffix(keyColumn, key0) {
+			rfv.SetMapIndex(reflect.ValueOf(v[key0]), reflect.ValueOf(v[key1]))
+		} else {
+			rfv.SetMapIndex(reflect.ValueOf(v[key1]), reflect.ValueOf(v[key0]))
+		}
 	}
 	return
 }
@@ -536,14 +533,6 @@ func (db *Database) ValueTo(column string, obj any) (err error) {
 		return err
 	}
 	return db.QueryRow(prepare, values...).Scan(obj)
-}
-func (db *Database) ValueTo2(column string, obj any) (err error) {
-	first, err := db.First(column)
-	if err != nil {
-		return err
-	}
-	reflect.Indirect(reflect.ValueOf(obj)).Set(reflect.ValueOf(first[column]))
-	return nil
 }
 
 // MaxTo 同 Max
