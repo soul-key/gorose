@@ -222,7 +222,12 @@ db().Table(User{}, "u").Join(gorose.As("user_info", "b"), "u.id", "=", "b.user_i
 db().Table("users").Join(UserInfo{}, func(wh builder.IJoinOn) {
     wh.On("a.id", "b.user_id").OrOn("a.sex", "b.sex")
 }).Get()
+// 等同于
+db().Table("users").JoinOn(UserInfo{}, func(wh builder.IJoinOn) {
+    wh.On("a.id", "b.user_id").OrOn("a.sex", "b.sex")
+}).Get()
 ```
+当`Join`的第二个参数为`builder.IJoinOn`时,等同于`JoinOn`用法(第二个参数有强类型提醒,方便ide快捷提示)
 
 ## where sub
 ```go

@@ -122,6 +122,9 @@ func (db *JoinClause) join(joinType string, table any, argOrFn ...any) *JoinClau
 func (db *JoinClause) Join(table any, argOrFn ...any) *JoinClause {
 	return db.join("INNER JOIN", table, argOrFn...)
 }
+func (db *JoinClause) JoinOn(table any, fn func(on IJoinOn)) *JoinClause {
+	return db.join("INNER JOIN", table, fn)
+}
 
 // LeftJoin 描述LEFT JOIN操作
 func (db *JoinClause) LeftJoin(table any, argOrFn ...any) *JoinClause {

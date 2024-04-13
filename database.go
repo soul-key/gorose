@@ -53,6 +53,10 @@ func (db *Database) Join(table any, argOrFn ...any) *Database {
 	db.Context.JoinClause.Join(table, argOrFn...)
 	return db
 }
+func (db *Database) JoinOn(table any, fn func(on builder.IJoinOn)) *Database {
+	db.Context.JoinClause.JoinOn(table, fn)
+	return db
+}
 
 // LeftJoin clause
 func (db *Database) LeftJoin(table any, argOrFn ...any) *Database {
