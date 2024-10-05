@@ -26,15 +26,15 @@ func NewEngin(g *GoRose) *Engin {
 }
 
 func (s *Engin) LastSql() SqlItem {
-	if slog.Default().Enabled(context.Background(), slog.LevelDebug) {
+	if !slog.Default().Enabled(context.Background(), slog.LevelDebug) {
 		return SqlItem{Err: errors.New("only record when slog level in debug mod")}
 	}
 	return s.lastSql
 }
 
 func (s *Engin) Log(sqls string, bindings ...any) {
-	slog.With("bindings", bindings).Debug(sqls)
 	if slog.Default().Enabled(context.Background(), slog.LevelDebug) {
+		slog.With("bindings", bindings).Debug(sqls)
 		s.lastSql = SqlItem{Sql: sqls, Bindings: bindings}
 	}
 }
@@ -47,7 +47,7 @@ func (s *Engin) execute(query string, args ...any) (int64, error) {
 	return exec.RowsAffected()
 }
 func (s *Engin) Exec(query string, args ...any) (sql.Result, error) {
-	slog.With("bindings", args).Debug(query)
+	s.Log(query, args...)
 	if s.tx != nil {
 		return s.tx.Exec(query, args...)
 	}
@@ -109,7 +109,7 @@ func (s *Engin) Transaction(closure ...func(*Engin) error) (err error) {
 }
 
 func (s *Engin) Query(query string, args ...any) (rows *sql.Rows, err error) {
-	slog.With("bindings", args).Debug(query)
+	s.Log(query, args...)
 	if s.tx != nil {
 		return s.tx.Query(query, args...)
 	} else {
@@ -118,7 +118,7 @@ func (s *Engin) Query(query string, args ...any) (rows *sql.Rows, err error) {
 }
 
 func (s *Engin) QueryRow(query string, args ...any) *sql.Row {
-	slog.With("bindings", args).Debug(query)
+	s.Log(query, args...)
 	if s.tx != nil {
 		return s.tx.QueryRow(query, args...)
 	} else {
