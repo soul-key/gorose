@@ -237,16 +237,16 @@ func (w *WhereClause) where(boolean string, column any, args ...any) IWhere {
 		if rfv.Kind() == reflect.Slice { // in/between
 			var operators = []string{"in", "not in"}
 			if slices.Contains(operators, strings.ToLower(args[0].(string))) {
-				val := ToSlice(args[1])
+				val := toSlice(args[1])
 				if len(val) > 0 {
-					w.addTypeWhereIn(args[2].(string), column.(string), args[0].(string), ToSlice(args[1]))
+					w.addTypeWhereIn(args[2].(string), column.(string), args[0].(string), toSlice(args[1]))
 				}
 			}
 			operators = []string{"between", "not between"}
 			if slices.Contains(operators, strings.ToLower(args[0].(string))) {
-				val := ToSlice(args[1])
+				val := toSlice(args[1])
 				if len(val) > 0 {
-					w.addTypeWhereBetween(args[2].(string), column.(string), args[0].(string), ToSlice(args[1]))
+					w.addTypeWhereBetween(args[2].(string), column.(string), args[0].(string), toSlice(args[1]))
 				}
 			}
 		} else if builder, ok := args[1].(IBuilder); ok {

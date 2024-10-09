@@ -2,7 +2,7 @@ package builder
 
 import "reflect"
 
-func ToSlice(arg any) []any {
+func toSlice(arg any) []any {
 	ref := reflect.Indirect(reflect.ValueOf(arg))
 	var res []any
 	switch ref.Kind() {
