@@ -1,4 +1,4 @@
-package mysql
+package driver
 
 import (
 	"encoding/json"
@@ -9,6 +9,14 @@ import (
 	"strings"
 	"testing"
 )
+
+func IsExpression(obj any) (b bool) {
+	rfv := reflect.Indirect(reflect.ValueOf(obj))
+	if rfv.Kind() == reflect.String && strings.Contains(rfv.String(), "?") {
+		b = true
+	}
+	return
+}
 
 func BackQuotes(arg any) string {
 	var tmp []string
@@ -56,18 +64,19 @@ func TrimPrefixAndOr(s string) string {
 	return regexp.MustCompile(`(?i)^\s*(and|or)\s+`).ReplaceAllString(s, "")
 }
 
-func assertsEqual(t *testing.T, expect, real any) {
+func AssertsEqual(t *testing.T, expect, real any) {
 	marshal, err := json.Marshal(expect)
-	assertsError(t, err)
+	AssertsError(t, err)
 	bytes, err := json.Marshal(real)
-	assertsError(t, err)
+	AssertsError(t, err)
 	if string(marshal) != string(bytes) {
 		methodName, file, line := getCallerInfo()
-		t.Errorf("[%s] Error\n\t Trace - %s:%v\n\tExpect - %T %s\n\t   Got - %T %s\n------------------------------------------------------", methodName, file, line, expect, marshal, real, bytes)
+		t.Errorf("[%s] Error\n\t Trace - %s:%v\n\tExpect - %T %s\n\t   Got - %T %s\n------------------------------------------------------",
+			methodName, file, line, expect, marshal, real, bytes)
 	}
 }
 
-func assertsError(t *testing.T, err error) {
+func AssertsError(t *testing.T, err error) {
 	if err != nil {
 		methodName, file, line := getCallerInfo()
 		t.Errorf("[%s] Error\n\t Trace - %s:%v\n\t%s\n------------------------------------------------------", methodName, file, line, err.Error())
@@ -99,7 +108,7 @@ func getCallerInfo() (string, string, int) {
 
 func jsonLog(t *testing.T, data any) {
 	marshal, err := json.Marshal(data)
-	assertsError(t, err)
+	AssertsError(t, err)
 	t.Logf("json data: %s", marshal)
 }
 

@@ -66,7 +66,7 @@ func (s *Engin) SavePoint(name any) (err error) {
 	return
 }
 func (s *Engin) RollbackTo(name any) (err error) {
-	_, err = s.tx.Exec("ROLLBACK TO ?", name)
+	_, err = s.tx.Exec("ROLLBACK TO SAVEPOINT ?", name)
 	return
 }
 func (s *Engin) Rollback() (err error) {

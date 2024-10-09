@@ -11,7 +11,7 @@ type Context struct {
 	LimitOffsetClause LimitOffsetClause
 	UnionClause       UnionClause
 
-	PessimisticLocking string
+	PessimisticLocking TypeLock
 	Prefix             string
 }
 
@@ -137,10 +137,10 @@ func (db *Context) Page(num int) *Context {
 	return db
 }
 func (db *Context) SharedLock() *Context {
-	db.PessimisticLocking = "LOCK IN SHARE MODE"
+	db.PessimisticLocking = TypeLockInShareMode
 	return db
 }
 func (db *Context) LockForUpdate() *Context {
-	db.PessimisticLocking = "FOR UPDATE"
+	db.PessimisticLocking = TypeLockForUpdate
 	return db
 }

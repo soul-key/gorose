@@ -88,9 +88,14 @@ func (db *Database) ToSqlDelete(obj any, mustColumn ...string) (sqlSegment strin
 }
 
 func (db *Database) ToSqlUpdate(obj any, mustColumn ...string) (sqlSegment string, binds []any, err error) {
-	return db.Driver.ToSqlUpdate(db.Context, builder.TypeToSqlUpdateCase{obj, mustColumn})
+	return db.Driver.ToSqlUpdate(db.Context, builder.TypeToSqlUpdateCase{BindOrData: obj, MustColumn: mustColumn})
 }
+
+// ToSqlIncDec
+//
+//	symbol: +/-
+//	data: {count: 2}	=> count = count + 2
 func (db *Database) ToSqlIncDec(symbol string, data map[string]any) (sql4prepare string, values []any, err error) {
 	//return db.Driver.ToSqlIncDec(db.Context, symbol, data)
-	return db.Driver.ToSqlUpdate(db.Context, builder.TypeToSqlIncDecCase{symbol, data})
+	return db.Driver.ToSqlUpdate(db.Context, builder.TypeToSqlIncDecCase{Symbol: symbol, Data: data})
 }

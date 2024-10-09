@@ -11,13 +11,13 @@ import (
 
 type Database struct {
 	*Engin
-	Driver  driver.IDriver
+	Driver  *driver.Driver
 	Context *builder.Context
 }
 
 func NewDatabase(g *GoRose) *Database {
 	return &Database{
-		Driver:  driver.GetDriver(g.driver),
+		Driver:  driver.NewDriver(g.driver),
 		Engin:   NewEngin(g),
 		Context: builder.NewContext(g.prefix),
 	}
@@ -139,31 +139,31 @@ func (db *Database) OrderByRaw(column string) *Database {
 
 // Limit 设置查询结果的限制数量。
 func (db *Database) Limit(limit int) *Database {
-	db.Context.LimitOffsetClause.Limit = limit
+	db.Context.Limit(limit)
 	return db
 }
 
 // Offset 设置查询结果的偏移量。
 func (db *Database) Offset(offset int) *Database {
-	db.Context.LimitOffsetClause.Offset = offset
+	db.Context.Offset(offset)
 	return db
 }
 
 // Page 页数,根据limit确定
 func (db *Database) Page(num int) *Database {
-	db.Context.LimitOffsetClause.Page = num
+	db.Context.Page(num)
 	return db
 }
 
 // SharedLock 4 select ... locking in share mode
 func (db *Database) SharedLock() *Database {
-	db.Context.PessimisticLocking = "LOCK IN SHARE MODE"
+	db.Context.SharedLock()
 	return db
 }
 
 // LockForUpdate 4 select ... for update
 func (db *Database) LockForUpdate() *Database {
-	db.Context.PessimisticLocking = "FOR UPDATE"
+	db.Context.LockForUpdate()
 	return db
 }
 

@@ -27,8 +27,8 @@ type TypeToSqlUpdateCase struct {
 }
 
 type TypeToSqlIncDecCase struct {
-	Symbol string
-	Data   map[string]any
+	Symbol string         // +/-
+	Data   map[string]any // {count: 2}	=> count = count + 2
 }
 
 type TypeToSqlInsertCase struct {
@@ -38,3 +38,11 @@ type TypeToSqlInsertCase struct {
 	UpdateFields    []string
 	MustColumn      []string
 }
+
+type TypeLock int8
+
+const (
+	TypeLockUnknown TypeLock = iota
+	TypeLockInShareMode
+	TypeLockForUpdate
+)

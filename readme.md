@@ -1,13 +1,15 @@
 # GoRose ORM V3
 PHP Laravel ORM 的 go 实现, 与 laravel 官方文档保持一致 https://laravel.com/docs/10.x/queries .  
 分为 go 风格 (struct 结构绑定用法) 和 php 风格 (map 结构用法).  
-php 风格用法, 完全可以使用 laravel query builder 的文档做参考, 尽量做到 1:1 还原.  
+php 风格用法, 完全可以使用 laravel query builder 的文档做参考, 尽量做到 1:1 还原.   
+
+## GoRose V3 架构图
+![](./assets/gorose.svg)
 
 ## 安装
 目前还处于beta阶段, 请谨慎使用. 由于没有打 tag, 只能使用 go mod 的方式引入
 ```shell
 # go.mod
-
 require github.com/gohouse/gorose/v3 master
 ```
 
@@ -57,18 +59,21 @@ func main() {
     db().Delete(&user) 
 }
 ```
-php风格用法 和 go风格用法对比
+php风格用法 和 go风格用法查询如下sql对比:   
+```sql
+select id,name,email from users where id=1 and name="test"
+```  
 ```go
-// select id,name,email from users where id=1 and name="test"
-db().Table("users").
+// php 风格写法
+user,err := db().Table("users").
     Select("id","name","email").
     Where("id", "=", 1).Where("name", "test").
     First()
-// 等同于
+// go 风格写法
 var user = User{Id: 1, Name: "test"}
-db().To(&user)
+err := db().To(&user)
 ```
-由此可以看出, 除了对 表 模型的绑定区别, 其他方法通用
+上边的两种用法结果相同,由此可以看出,除了对 表 模型的绑定区别, 其他方法通用
 
 ## 配置
 单数据库连接, 可以直接同官方接口一样用法
@@ -104,6 +109,13 @@ var rose = gorose.Open(
     },
 )
 ```
+
+## 驱动支持
+- MySQL
+- MsSQL
+- Postgresql
+- Oracle
+- Sqlite3
 
 ## 事务
 ```go
@@ -346,7 +358,7 @@ type Result struct {
     Bname string `db:"bname"`
 }
 var res Result
-// select a.id, a.name aname, b.name bname from a inner join b on a.id=b.id where a.id>1
+// select a.id, a.name aname, b.name bname from a inner join b on a.id=b.aid where a.id>1
 db().Table("a").Join("b", "a.id","b.aid").Select("a.id", "a.name aname","b.name bname").Where("a.id", ">", 1).Bind(&res)
 ```
 查询字段的显示名字一定要跟 结构体的字段 tag(db) 名字相同, 否则不会被赋值  

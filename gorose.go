@@ -2,21 +2,19 @@ package gorose
 
 import (
 	"database/sql"
-	"github.com/gohouse/gorose/v3/builder"
-	_ "github.com/gohouse/gorose/v3/driver/mysql"
 )
 
 type GoRose struct {
-	Cluster  *ConfigCluster
-	master   []*sql.DB
-	slave    []*sql.DB
-	driver   string
-	prefix   string
-	handlers HandlersChain
+	Cluster *ConfigCluster
+	master  []*sql.DB
+	slave   []*sql.DB
+	driver  string
+	prefix  string
+	//handlers HandlersChain
 }
 
-type HandlerFunc func(*builder.Context)
-type HandlersChain []HandlerFunc
+//type HandlerFunc func(*builder.Context)
+//type HandlersChain []HandlerFunc
 
 //const abortIndex int8 = math.MaxInt8 >> 1
 
@@ -33,10 +31,10 @@ type HandlersChain []HandlerFunc
 //	}
 //}
 
-func (g *GoRose) Use(h ...HandlerFunc) *GoRose {
-	g.handlers = append(g.handlers, h...)
-	return g
-}
+//func (g *GoRose) Use(h ...HandlerFunc) *GoRose {
+//	g.handlers = append(g.handlers, h...)
+//	return g
+//}
 
 //func (dg *GoRose) Use(h ...HandlerFunc) *GoRose {
 //}
@@ -69,16 +67,18 @@ func Open(conf ...any) *GoRose {
 				return &g
 			}
 			g.master, g.slave = g.Cluster.init()
-		} else {
-			g.driver = "mysql" // for toSql test
+		} else if dr, ok := conf[0].(string); ok {
+			g.driver = dr // for toSql test
 		}
 	case 2:
 		g.driver = conf[0].(string)
-		db, err := sql.Open(g.driver, conf[1].(string))
-		if err != nil {
-			panic(err.Error())
-		}
-		g.master = append(g.master, db)
+		if conf[1].(string) != "" {
+			db, err := sql.Open(g.driver, conf[1].(string))
+			if err != nil {
+				panic(err.Error())
+			}
+			g.master = append(g.master, db)
+		} // else: for toSql test
 	default:
 		panic("config must be *gorose.ConfigCluster or sql.Open() origin params")
 	}

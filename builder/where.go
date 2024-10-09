@@ -162,13 +162,13 @@ func (w *WhereClause) whereRaw(boolean string, sqlSeg string, bindingsAndBoolean
 // Examples:
 //
 //	Where("id=1")
-//	Where("id=?",1)
+//	Where("id=?",1), 不支持
 //	Where("id",1)
 //	Where("id","=",1)
 //	Where("id","=",1,"AND")
 //	Where("id","=",(select id from table limit 1))
 //	Where("id","in",(select id from table), "AND")
-//	Where(func(wh iface.WhereClause){wh.Where().OrWhere().WhereRaw()...})
+//	Where(func(wh builder.WhereClause){wh.Where().OrWhere().WhereRaw()...})
 //	Where(["id=1"])
 //	Where(["id","=",1])
 //	Where(["id",1])
@@ -226,9 +226,9 @@ func (w *WhereClause) where(boolean string, column any, args ...any) IWhere {
 			w.Err = errors.New("not supported where params")
 		}
 	case 1:
-		if IsExpression(column) {
-			return w.whereRaw(boolean, column.(string), args...)
-		}
+		//if driver.IsExpression(column) {
+		//	return w.whereRaw(boolean, column.(string), args...)
+		//}
 		return w.where(boolean, column, "=", args[0], boolean)
 	case 2:
 		return w.where(boolean, column, args[0], args[1], boolean)
