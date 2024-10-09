@@ -53,7 +53,6 @@ func (db *Database) Paginate(obj ...any) (result Pagination, err error) {
 	return
 }
 
-
 func (db *Database) WhereSub(column string, operation string, sub builder.WhereSubHandler) *Database {
 	db.Context.WhereClause.WhereSub(column, operation, sub)
 	return db
@@ -113,6 +112,7 @@ func (db *Database) OrWhereLike(column, value string) *Database {
 	db.Context.WhereClause.OrWhereLike(column, value)
 	return db
 }
+
 //func (db *Database) WhereNotIn(column string, value any) *Database {
 //	db.Context.WhereClause.WhereNotIn(column, value)
 //	return db
@@ -148,6 +148,7 @@ func (db *Database) OrWhereLike(column, value string) *Database {
 //	db.Context.WhereClause.whereLike("OR", column, value, true)
 //	return db
 //}
+
 func (db *Database) WhereNot(column any, args ...any) *Database {
 	db.Context.WhereClause.WhereNot(column, args...)
 	return db

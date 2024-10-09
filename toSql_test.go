@@ -11,10 +11,10 @@ type User struct {
 }
 
 // var dbg = Open("mysql") // just test toSql
-// var dbg = Open("postgresql") // just test toSql
+var dbg = Open("postgresql") // just test toSql
 // var dbg = Open("mssql") // just test toSql
 // var dbg = Open("oracle") // just test toSql
-var dbg = Open("sqlite3") // just test toSql
+//var dbg = Open("sqlite3") // just test toSql
 
 func db() *Database {
 	return dbg.NewDatabase()
@@ -63,12 +63,15 @@ func TestDatabase_ToSqlInsert(t *testing.T) {
 	driver.AssertsEqual(t, expectValues, values)
 }
 func TestDatabase_ToSqlInserts(t *testing.T) {
-	var user = []User{{Name: "John"}, {Name: "Alice"}}
+	var user = []User{{Id: 1, Name: "John"}, {Id: 2, Name: "Alice"}}
 	prepare, values, err := db().ToSqlInsert(&user)
 	driver.AssertsError(t, err)
-	var expect = "INSERT INTO `User` (`name`) VALUES (?),(?)"
-	driver.AssertsEqual(t, expect, prepare)
-	var expectValues = []string{"John", "Alice"}
+	var expect = map[string]string{
+		"mysql":      "INSERT INTO `User` (`id`,`name`) VALUES (?,?),(?,?)",
+		"postgresql": `INSERT INTO "User" ("id","name") VALUES ($1,$2),($3,$4)`,
+	}
+	driver.AssertsEqual(t, expect[dbg.driver], prepare)
+	var expectValues = []interface{}{1, "John", 2, "Alice"}
 	driver.AssertsEqual(t, expectValues, values)
 }
 func TestDatabase_ToSqlUpdate(t *testing.T) {

@@ -111,11 +111,15 @@ var rose = gorose.Open(
 ```
 
 ## 驱动支持
-- MySQL
-- MsSQL
-- Postgresql
-- Oracle
-- Sqlite3
+- mysql : https://github.com/go-sql-driver/mysql  
+- sqlite3 : https://github.com/mattn/go-sqlite3  
+- postgres : https://github.com/lib/pq  
+- oracle : https://github.com/mattn/go-oci8  
+- mssql : https://github.com/denisenkom/go-mssqldb  
+
+目前实现了以上5中数据库的支持, 通用数据库,只需要添加更多的 `gorose/driver/dialect.IDialect` 接口即可  
+非通用数据库,只要实现了 gorose/driver.IDriver 接口,理论上可以支持任意数据库,包括 redis,mongo 等都可以通过这个接口来实现  
+所有的 orm 链式操作都在 `gorose/builder.Context` 中, 直接可以拿到最原始的数据  
 
 ## 事务
 ```go
@@ -125,7 +129,7 @@ db().Transaction(func(tx gorose.TxHandler) error {
     tx().Insert(&user)
     tx().Update(&user)
     tx().To(&user)
-}
+})
 
 // 手动事务
 tx = db().Begin()
@@ -269,6 +273,7 @@ db().Table(User{}).Where("id",">", 1).Where(func(wh builder.IWhere) {
     wh.Where("sex", 1).OrWhere("sex", 2)
 })
 ```
+这里的 Where 等同于 WhereNested
 ```go
 // where id>1 and (sex=1 or sex=2)
 db().Table(User{}).Where("id",">", 1).WhereNested(func(wh builder.IWhere) {
@@ -386,9 +391,6 @@ db().Table("users").MinTo("age", &min)
 ## 日志
 默认采用 官方库的 slog debug level, 如果不想显示sql日志, 只需要设置slog的level到debug以上即可, 如: Info, Warn, Error
 
-## 驱动
-只要实现了 gorose/driver.IDriver 接口即可,理论上可以支持任意数据库, 目前实现了mysql的支持, 可以开发更多接口的支持  
-
 ## 数据库字段为null的处理
 ```go
 type User struct {
@@ -475,7 +477,8 @@ if age.Valid {
 
 - [x] Pluck  
 - [x] List  
-- [x] Value  
+- [x] Value
+- [x] Paginate
 
 - [x] Increment  
 - [x] Decrement  
@@ -508,3 +511,4 @@ if age.Valid {
 - [x] MaxTo  
 - [x] UnionTo  
 - [x] UnionAllTo  
+
