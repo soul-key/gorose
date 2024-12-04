@@ -112,7 +112,7 @@ func jsonLog(t *testing.T, data any) {
 	t.Logf("json data: %s", marshal)
 }
 
-func Map[Data any, Datas ~[]Data, Result any](datas Datas, mapper func(Data) Result) []Result {
+func Map[Data any, Result any](datas []Data, mapper func(Data) Result) []Result {
 	results := make([]Result, 0, len(datas))
 	for _, data := range datas {
 		results = append(results, mapper(data))

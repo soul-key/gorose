@@ -515,7 +515,7 @@ func (d Driver) toSqlInsert(c *builder.Context, data any, insertCase builder.Typ
 		return
 	}
 	//sql4prepare = NamedSprintf(":insert INTO :tables (:fields) VALUES :placeholder :onDuplicateKey", insert, tables, strings.Join(fields, ","), strings.Join(valuesPlaceholderArr, ","), onDuplicateKey)
-	sql4prepare = NamedSprintf("%s INTO %s (%s) VALUES %s %s", insert, tables, strings.Join(fields, ","), strings.Join(valuesPlaceholderArr, ","), onDuplicateKey)
+	sql4prepare = fmt.Sprintf("%s INTO %s (%s) VALUES %s %s", insert, tables, strings.Join(fields, ","), strings.Join(valuesPlaceholderArr, ","), onDuplicateKey)
 	return
 }
 
@@ -565,6 +565,6 @@ func (d Driver) toSqlDelete(c *builder.Context) (sql4prepare string, values []an
 	}
 	values = append(values, binds...)
 	//sql4prepare = NamedSprintf("DELETE FROM :tables :wheres", tables, wheres)
-	sql4prepare = NamedSprintf("DELETE FROM %s %s", tables, wheres)
+	sql4prepare = fmt.Sprintf("DELETE FROM %s %s", tables, wheres)
 	return
 }
